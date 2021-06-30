@@ -16,13 +16,12 @@ import (
 type Client struct {
 	Client  *http.Client
 	Headers map[string]string
+	Server  string
 	Token   string
-	URL     string
 }
 
-type ResponseFunc func(*http.Response) error
-
-func New(url string) *Client {
+// New returns a new Client, initialized with the Salt API server.
+func New(server string) *Client {
 	return &Client{
 		Client: &http.Client{
 			Transport: &http.Transport{
@@ -35,11 +34,13 @@ func New(url string) *Client {
 			"Accept":       "application/json",
 			"Content-Type": "application/json",
 		},
-		URL: url,
+		Server: server,
 	}
 }
 
-func (c *Client) do(ctx context.Context, method, path string, body interface{}, fn ResponseFunc) error {
+type responseFunc func(*http.Response) error
+
+func (c *Client) do(ctx context.Context, method, path string, body interface{}, fn responseFunc) error {
 	var buf bytes.Buffer
 
 	if body != nil {
@@ -48,7 +49,7 @@ func (c *Client) do(ctx context.Context, method, path string, body interface{}, 
 		}
 	}
 
-	req, err := http.NewRequestWithContext(ctx, method, c.URL+"/"+path, &buf)
+	req, err := http.NewRequestWithContext(ctx, method, c.Server+"/"+path, &buf)
 
 	if err != nil {
 		return err
@@ -101,6 +102,9 @@ func (c *Client) Paragraph(r io.Reader) string {
 	return v
 }
 
+// Tokens reads the expected sequence of JSON tokens from the decoder, returning
+// an error if not all tokens were able to be read, or an unexpected token is
+// encountered.
 func (c *Client) Tokens(dec *json.Decoder, seq []json.Token) error {
 	var err error
 	var tok json.Token
@@ -109,7 +113,8 @@ func (c *Client) Tokens(dec *json.Decoder, seq []json.Token) error {
 		tok, err = dec.Token()
 
 		if !reflect.DeepEqual(exp, tok) {
-			return fmt.Errorf("expected %v, received %v, error = %w", exp, tok, err)
+			return fmt.Errorf("expected %v (%T), received %v (%T), error %v",
+				exp, exp, tok, tok, err)
 		}
 	}
 

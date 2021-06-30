@@ -21,6 +21,10 @@ func (m *RawMessage) Has(path string) bool {
 	return m.Get(path).Exists()
 }
 
+func (m *RawMessage) Result() gjson.Result {
+	return gjson.ParseBytes(*m)
+}
+
 func (m *RawMessage) String() string {
 	return string(pretty.Pretty(*m))
 }

@@ -2,15 +2,17 @@ package salt
 
 import (
 	"context"
+	"encoding/json"
 	"os"
+	"strings"
 	"testing"
 )
 
 func TestClient(t *testing.T) {
-	var url, username, password string
+	var server, username, password string
 
 	var values = map[string]*string{
-		"SALTAPI_URL":  &url,
+		"SALTAPI_URL":  &server,
 		"SALTAPI_USER": &username,
 		"SALTAPI_PASS": &password,
 	}
@@ -23,7 +25,7 @@ func TestClient(t *testing.T) {
 		}
 	}
 
-	c := New(url)
+	c := New(server)
 
 	ctx := context.Background()
 
@@ -57,5 +59,83 @@ func TestClient(t *testing.T) {
 		}
 
 		t.Logf("Seen %d minions.", len(minions))
+	})
+
+	t.Run("Paragraph", func(t *testing.T) {
+		// This is the slightly simplified HTML response from Salt when a login is rejected.
+		var bodyHit = `
+                <html>
+                <head>
+                    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+                    <title>401 Unauthorized</title>
+                </head>
+                    <body>
+                        <h2>401 Unauthorized</h2>
+                        <p>Could not authenticate using provided credentials</p>
+                        <pre id="traceback"></pre>
+                    <div id="powered_by">
+                      <span>
+                        Powered by <a href="http://www.cherrypy.org">CherryPy 18.6.0</a>
+                      </span>
+                    </div>
+                    </body>
+                </html>
+            `
+
+		var bodyMiss = `
+                <html>
+                <head>
+                    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"></meta>
+                    <title>401 Unauthorized</title>
+                </head>
+                    <body>
+                        <h2>401 Unauthorized</h2>
+                        <b>Could not authenticate using provided credentials</b>
+                        <pre id="traceback"></pre>
+                    <div id="powered_by">
+                      <span>
+                        Powered by <a href="http://www.cherrypy.org">CherryPy 18.6.0</a>
+                      </span>
+                    </div>
+                    </body>
+                </html>
+            `
+
+		var bodyInvalid = `invalid html`
+
+		var tests = map[string]string{
+			bodyHit:     "Could not authenticate using provided credentials",
+			bodyMiss:    "",
+			bodyInvalid: "",
+		}
+
+		for body, expect := range tests {
+			message := c.Paragraph(strings.NewReader(body))
+			if expect != message {
+				t.Fatalf("expected %s, received %s", expect, message)
+			}
+		}
+	})
+
+	t.Run("Tokens", func(t *testing.T) {
+		// This is the slightly simplified HTML response from Salt when a login is rejected.
+		var doc = `{ "key": [1, 2] }`
+
+		var seq = []json.Token{
+			json.Delim('{'),
+			json.Token("key"),
+			json.Delim('['),
+			json.Token(1.0),
+		}
+
+		dec := json.NewDecoder(strings.NewReader(doc))
+
+		if err := c.Tokens(dec, seq); err != nil {
+			t.Fatal(err)
+		}
+
+		if err := c.Tokens(dec, []json.Token{json.Delim('{')}); err == nil {
+			t.Fatalf("Expected error, none returned.")
+		}
 	})
 }
