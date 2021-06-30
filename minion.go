@@ -9,7 +9,7 @@ import (
 
 type MinionFunc func(id string, grains RawMessage) error
 
-func (c *Client) Minions(ctx context.Context, cb MinionFunc) error {
+func (c *Client) Minions(ctx context.Context, fn MinionFunc) error {
 	return c.do(ctx, "GET", "minions", nil, func(r *http.Response) error {
 		dec := json.NewDecoder(r.Body)
 
@@ -22,7 +22,7 @@ func (c *Client) Minions(ctx context.Context, cb MinionFunc) error {
 			json.Delim('{'),
 		}
 
-		if err := c.readTokens(dec, seq); err != nil {
+		if err := c.Tokens(dec, seq); err != nil {
 			return err
 		}
 
@@ -46,7 +46,7 @@ func (c *Client) Minions(ctx context.Context, cb MinionFunc) error {
 				return err
 			}
 
-			if err := cb(id, grains); err != nil {
+			if err := fn(id, grains); err != nil {
 				return err
 			}
 		}
@@ -57,6 +57,6 @@ func (c *Client) Minions(ctx context.Context, cb MinionFunc) error {
 			json.Delim('}'),
 		}
 
-		return c.readTokens(dec, seq)
+		return c.Tokens(dec, seq)
 	})
 }

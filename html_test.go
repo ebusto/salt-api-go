@@ -1,4 +1,4 @@
-package html
+package salt
 
 import (
 	"strings"
@@ -53,8 +53,10 @@ func TestParagraph(t *testing.T) {
 		bodyInvalid: "",
 	}
 
+	c := &Client{}
+
 	for body, expect := range tests {
-		message := Paragraph(strings.NewReader(body))
+		message := c.Paragraph(strings.NewReader(body))
 		if expect != message {
 			t.Fatalf("expected %s, received %s", expect, message)
 		}

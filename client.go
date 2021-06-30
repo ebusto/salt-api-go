@@ -6,10 +6,11 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"reflect"
 
-	"gitlab-master.nvidia.com/itml-public/salt-api-go/html"
+	"github.com/PuerkitoBio/goquery"
 )
 
 type Client struct {
@@ -38,7 +39,7 @@ func New(url string) *Client {
 	}
 }
 
-func (c *Client) do(ctx context.Context, method, path string, body interface{}, cb ResponseFunc) error {
+func (c *Client) do(ctx context.Context, method, path string, body interface{}, fn ResponseFunc) error {
 	var buf bytes.Buffer
 
 	if body != nil {
@@ -73,15 +74,34 @@ func (c *Client) do(ctx context.Context, method, path string, body interface{}, 
 	}
 
 	if !ok[res.StatusCode] {
-		return NewError(res.StatusCode, html.Paragraph(res.Body))
+		return NewError(res.StatusCode, c.Paragraph(res.Body))
 	}
 
 	defer res.Body.Close()
 
-	return cb(res)
+	return fn(res)
 }
 
-func (c *Client) readTokens(dec *json.Decoder, seq []json.Token) error {
+// Paragraph returns the contents of paragraph in the body of the HTML document.
+// It is best effort, and will return an empty string if there is no match. The
+// response body is read in its entirety, but is not closed.
+func (c *Client) Paragraph(r io.Reader) string {
+	var v string
+
+	doc, err := goquery.NewDocumentFromReader(r)
+
+	if err == nil {
+		doc.Find("body p").Each(func(_ int, s *goquery.Selection) {
+			v = s.Text()
+		})
+	}
+
+	io.ReadAll(r)
+
+	return v
+}
+
+func (c *Client) Tokens(dec *json.Decoder, seq []json.Token) error {
 	var err error
 	var tok json.Token
 
