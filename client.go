@@ -69,6 +69,8 @@ func (c *Client) do(ctx context.Context, method, path string, body interface{}, 
 		return err
 	}
 
+	defer c.DiscardAndClose(res.Body)
+
 	var ok = map[int]bool{
 		200: true,
 		202: true,
@@ -78,9 +80,17 @@ func (c *Client) do(ctx context.Context, method, path string, body interface{}, 
 		return NewError(res.StatusCode, c.Paragraph(res.Body))
 	}
 
-	defer res.Body.Close()
+	if fn == nil {
+		return nil
+	}
 
 	return fn(res)
+}
+
+// DiscardAndClose discards any unread bytes and closes the io.ReadCloser.
+func (c *Client) DiscardAndClose(r io.ReadCloser) {
+	io.Copy(io.Discard, r)
+	r.Close()
 }
 
 // Paragraph returns the contents of paragraph in the body of the HTML document.
@@ -96,8 +106,6 @@ func (c *Client) Paragraph(r io.Reader) string {
 			v = s.Text()
 		})
 	}
-
-	io.ReadAll(r)
 
 	return v
 }

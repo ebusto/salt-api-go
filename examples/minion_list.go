@@ -22,9 +22,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	c.Minions(ctx, func(id string, grains salt.RawMessage) error {
+	c.Minions(ctx, func(id string, grains salt.Response) error {
 		log.Printf("ID = %s, osfinger = %s", id, grains.Get("osfinger"))
 
 		return nil
 	})
+
+	c.Logout(ctx)
 }

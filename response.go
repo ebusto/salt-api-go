@@ -7,29 +7,29 @@ import (
 	"github.com/tidwall/pretty"
 )
 
-type RawMessage []byte
+type Response []byte
 
-func (m *RawMessage) Decode(v interface{}) error {
+func (m *Response) Decode(v interface{}) error {
 	return json.Unmarshal(*m, v)
 }
 
-func (m *RawMessage) Get(path string) gjson.Result {
+func (m *Response) Get(path string) gjson.Result {
 	return gjson.GetBytes(*m, path)
 }
 
-func (m *RawMessage) Has(path string) bool {
+func (m *Response) Has(path string) bool {
 	return m.Get(path).Exists()
 }
 
-func (m *RawMessage) Result() gjson.Result {
+func (m *Response) Result() gjson.Result {
 	return gjson.ParseBytes(*m)
 }
 
-func (m *RawMessage) String() string {
+func (m *Response) String() string {
 	return string(pretty.Pretty(*m))
 }
 
-func (m *RawMessage) UnmarshalJSON(data []byte) error {
+func (m *Response) UnmarshalJSON(data []byte) error {
 	*m = append((*m)[0:0], data...)
 
 	return nil

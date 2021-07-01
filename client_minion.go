@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-type MinionFunc func(id string, grains RawMessage) error
+type MinionFunc func(id string, grains Response) error
 
 func (c *Client) Minions(ctx context.Context, fn MinionFunc) error {
 	return c.do(ctx, "GET", "minions", nil, func(r *http.Response) error {
@@ -27,7 +27,7 @@ func (c *Client) Minions(ctx context.Context, fn MinionFunc) error {
 		}
 
 		// The grains buffer is reused between minions to minimize allocations.
-		var grains RawMessage
+		var grains Response
 
 		for dec.More() {
 			t, err := dec.Token()

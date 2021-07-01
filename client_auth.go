@@ -18,3 +18,7 @@ func (c *Client) Login(ctx context.Context, username, password string) error {
 		return nil
 	})
 }
+
+func (c *Client) Logout(ctx context.Context) error {
+	return c.do(ctx, "POST", "logout", nil, nil)
+}

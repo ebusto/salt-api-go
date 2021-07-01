@@ -42,7 +42,7 @@ func TestClient(t *testing.T) {
 	t.Run("Minions", func(t *testing.T) {
 		var minions []string
 
-		fn := func(id string, grains RawMessage) error {
+		fn := func(id string, grains Response) error {
 			t.Logf("Minion: ID = %s, osfinger = %s", id, grains.Get("osfinger"))
 
 			minions = append(minions, id)
