@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"gitlab-master.nvidia.com/itml-public/salt-api-go"
+	"github.com/ebusto/salt-api-go"
 )
 
 func main() {
