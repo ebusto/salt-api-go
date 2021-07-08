@@ -2,7 +2,6 @@ package salt
 
 import (
 	"context"
-	"encoding/json"
 	"os"
 	"strings"
 	"testing"
@@ -50,7 +49,7 @@ func TestClient(t *testing.T) {
 			return nil
 		}
 
-		if err := c.Minions(ctx, fn); err != nil {
+		if err := c.Minions.All(ctx, fn); err != nil {
 			t.Fatal(err)
 		}
 
@@ -114,28 +113,6 @@ func TestClient(t *testing.T) {
 			if expect != message {
 				t.Fatalf("expected %s, received %s", expect, message)
 			}
-		}
-	})
-
-	t.Run("Tokens", func(t *testing.T) {
-		// This is the slightly simplified HTML response from Salt when a login is rejected.
-		var doc = `{ "key": [1, 2] }`
-
-		var seq = []json.Token{
-			json.Delim('{'),
-			json.Token("key"),
-			json.Delim('['),
-			json.Token(1.0),
-		}
-
-		dec := json.NewDecoder(strings.NewReader(doc))
-
-		if err := c.Tokens(dec, seq); err != nil {
-			t.Fatal(err)
-		}
-
-		if err := c.Tokens(dec, []json.Token{json.Delim('{')}); err == nil {
-			t.Fatalf("Expected error, none returned.")
 		}
 	})
 }

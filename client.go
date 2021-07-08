@@ -5,10 +5,8 @@ import (
 	"context"
 	"crypto/tls"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
-	"reflect"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -18,11 +16,14 @@ type Client struct {
 	Headers map[string]string
 	Server  string
 	Token   string
+
+	Jobs    *Jobs
+	Minions *Minions
 }
 
 // New returns a new Client, initialized with the Salt API server.
 func New(server string) *Client {
-	return &Client{
+	c := &Client{
 		Client: &http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{
@@ -36,6 +37,11 @@ func New(server string) *Client {
 		},
 		Server: server,
 	}
+
+	c.Jobs = &Jobs{c}
+	c.Minions = &Minions{c}
+
+	return c
 }
 
 type responseFunc func(*http.Response) error
@@ -108,23 +114,4 @@ func (c *Client) Paragraph(r io.Reader) string {
 	}
 
 	return v
-}
-
-// Tokens reads the expected sequence of JSON tokens from the decoder, returning
-// an error if not all tokens were able to be read, or an unexpected token is
-// encountered.
-func (c *Client) Tokens(dec *json.Decoder, seq []json.Token) error {
-	var err error
-	var tok json.Token
-
-	for _, exp := range seq {
-		tok, err = dec.Token()
-
-		if !reflect.DeepEqual(exp, tok) {
-			return fmt.Errorf("expected %v (%T), received %v (%T), error %v",
-				exp, exp, tok, tok, err)
-		}
-	}
-
-	return err
 }

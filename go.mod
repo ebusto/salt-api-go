@@ -1,4 +1,4 @@
-module gitlab-master.nvidia.com/itml-public/salt-api-go
+module github.com/ebusto/salt-api-go
 
 go 1.16
 
