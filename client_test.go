@@ -38,6 +38,28 @@ func TestClient(t *testing.T) {
 		}
 	})
 
+	t.Run("Jobs", func(t *testing.T) {
+		var jobs []string
+
+		fn := func(id string, job Response) error {
+			t.Logf("Job: ID = %s, function = %s", id, job.Get("Function"))
+
+			jobs = append(jobs, id)
+
+			return nil
+		}
+
+		if err := c.Jobs.All(ctx, fn); err != nil {
+			t.Fatal(err)
+		}
+
+		if len(jobs) == 0 {
+			t.Fatalf("No jobs were returned.")
+		}
+
+		t.Logf("Seen %d jobs.", len(jobs))
+	})
+
 	t.Run("Minions", func(t *testing.T) {
 		var minions []string
 
@@ -58,6 +80,20 @@ func TestClient(t *testing.T) {
 		}
 
 		t.Logf("Seen %d minions.", len(minions))
+	})
+
+	t.Run("Logout", func(t *testing.T) {
+		if err := c.Logout(ctx); err != nil {
+			t.Fatal(err)
+		}
+
+		err := c.Minions.All(ctx, func(_ string, _ Response) error {
+			return nil
+		})
+
+		if err == nil {
+			t.Fatalf("Expected error when listing minions after logout.")
+		}
 	})
 
 	t.Run("Paragraph", func(t *testing.T) {
