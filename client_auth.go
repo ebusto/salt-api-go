@@ -6,7 +6,7 @@ import (
 )
 
 func (c *Client) Login(ctx context.Context, username, password string) error {
-	var req = map[string]string{
+	req := Request{
 		"username": username,
 		"password": password,
 		"eauth":    "pam",

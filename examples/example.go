@@ -4,6 +4,7 @@ import (
 	"context"
 	"log"
 	"os"
+	"time"
 
 	"github.com/ebusto/salt-api-go"
 )
@@ -43,6 +44,19 @@ func main() {
 	}
 
 	c.Run(ctx, &cmd, printUsage)
+
+	c.Events.Fire(ctx, "salt-api-go/test", salt.Request{
+		"test": true,
+		"time": time.Now(),
+	})
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	ctx, _ = context.WithTimeout(ctx, time.Second*10)
+
+	c.Events.Stream(ctx, printEvent)
 }
 
 func printMinion(id string, grains salt.Response) error {
@@ -80,6 +94,12 @@ func printUsage(id string, response salt.Response) error {
 	for mount, info := range usage {
 		log.Println(id, mount, info.Filesystem, info.Used)
 	}
+
+	return nil
+}
+
+func printEvent(event salt.Response) error {
+	log.Println(event.Get("tag"), string(event))
 
 	return nil
 }

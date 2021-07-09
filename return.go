@@ -25,8 +25,8 @@ func readReturn(r io.Reader, fn ReturnFunc) error {
 		return err
 	}
 
-	// The value buffer is reused to minimize allocations.
-	var value Response
+	// The data buffer is reused to minimize allocations.
+	var data Response
 
 	for dec.More() {
 		t, err := dec.Token()
@@ -41,11 +41,11 @@ func readReturn(r io.Reader, fn ReturnFunc) error {
 			return fmt.Errorf("expected string, received %s", t)
 		}
 
-		if err := dec.Decode(&value); err != nil {
+		if err := dec.Decode(&data); err != nil {
 			return err
 		}
 
-		if err := fn(id, value); err != nil {
+		if err := fn(id, data); err != nil {
 			return err
 		}
 	}

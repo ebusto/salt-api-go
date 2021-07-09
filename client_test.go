@@ -4,6 +4,7 @@ import (
 	"context"
 	"os"
 	"testing"
+	"time"
 )
 
 func TestClient(t *testing.T) {
@@ -90,6 +91,26 @@ func TestClient(t *testing.T) {
 
 		if err != nil {
 			t.Fatal(err)
+		}
+	})
+
+	t.Run("Events", func(t *testing.T) {
+		var seen int
+
+		ctx, cancel := context.WithTimeout(ctx, time.Second*15)
+
+		defer cancel()
+
+		c.Events.Stream(ctx, func(event Response) error {
+			t.Logf("Events: tag = %s", event.Get("tag"))
+
+			seen++
+
+			return nil
+		})
+
+		if seen == 0 {
+			t.Fatalf("No events were returned.")
 		}
 	})
 

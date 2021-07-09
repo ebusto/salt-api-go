@@ -15,6 +15,7 @@ type Client struct {
 	Server  string
 	Token   string
 
+	Events  *Events
 	Jobs    *Jobs
 	Minions *Minions
 }
@@ -36,6 +37,7 @@ func New(server string) *Client {
 		Server: server,
 	}
 
+	c.Events = &Events{c}
 	c.Jobs = &Jobs{c}
 	c.Minions = &Minions{c}
 
@@ -44,11 +46,11 @@ func New(server string) *Client {
 
 type responseFunc func(*http.Response) error
 
-func (c *Client) do(ctx context.Context, method, path string, body interface{}, fn responseFunc) error {
+func (c *Client) do(ctx context.Context, method, path string, data interface{}, fn responseFunc) error {
 	var buf bytes.Buffer
 
-	if body != nil {
-		if err := json.NewEncoder(&buf).Encode(body); err != nil {
+	if data != nil {
+		if err := json.NewEncoder(&buf).Encode(data); err != nil {
 			return err
 		}
 	}
@@ -74,10 +76,10 @@ func (c *Client) do(ctx context.Context, method, path string, body interface{}, 
 	}
 
 	// Discard any unread bytes, and close the response body.
-	defer func(r io.ReadCloser) {
-		io.Copy(io.Discard, r)
-		r.Close()
-	}(res.Body)
+	defer func() {
+		io.Copy(io.Discard, res.Body)
+		res.Body.Close()
+	}()
 
 	var ok = map[int]bool{
 		200: true,
