@@ -37,6 +37,7 @@ func main() {
 	// Ping all minions.
 	c.Ping(ctx, "*", printPong)
 
+	// Execute the disk.usage function on minions matching '*salt*'.
 	cmd := salt.Command{
 		Client:   "local",
 		Function: "disk.usage",
@@ -45,15 +46,13 @@ func main() {
 
 	c.Run(ctx, &cmd, printUsage)
 
+	// Fire an event onto the bus.
 	c.Events.Fire(ctx, "salt-api-go/test", salt.Request{
 		"test": true,
 		"time": time.Now(),
 	})
 
-	if err != nil {
-		log.Fatal(err)
-	}
-
+	// Display events for 10 seconds.
 	ctx, _ = context.WithTimeout(ctx, time.Second*10)
 
 	c.Events.Stream(ctx, printEvent)
