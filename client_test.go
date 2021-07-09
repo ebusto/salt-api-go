@@ -81,6 +81,18 @@ func TestClient(t *testing.T) {
 		t.Logf("Seen %d minions.", len(minions))
 	})
 
+	t.Run("Ping", func(t *testing.T) {
+		err := c.Ping(ctx, "*", func(id string, ok bool) error {
+			t.Logf("Ping: ID = %s, OK = %v", id, ok)
+
+			return nil
+		})
+
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
+
 	t.Run("Logout", func(t *testing.T) {
 		if err := c.Logout(ctx); err != nil {
 			t.Fatal(err)
