@@ -7,8 +7,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-
-	"github.com/PuerkitoBio/goquery"
 )
 
 type Client struct {
@@ -75,7 +73,11 @@ func (c *Client) do(ctx context.Context, method, path string, body interface{}, 
 		return err
 	}
 
-	defer c.DiscardAndClose(res.Body)
+	// Discard any unread bytes, and close the response body.
+	defer func(r io.ReadCloser) {
+		io.Copy(io.Discard, r)
+		r.Close()
+	}(res.Body)
 
 	var ok = map[int]bool{
 		200: true,
@@ -83,7 +85,7 @@ func (c *Client) do(ctx context.Context, method, path string, body interface{}, 
 	}
 
 	if !ok[res.StatusCode] {
-		return NewError(res.StatusCode, c.Paragraph(res.Body))
+		return NewError(res.StatusCode, htmlParagraph(res.Body))
 	}
 
 	if fn == nil {
@@ -91,27 +93,4 @@ func (c *Client) do(ctx context.Context, method, path string, body interface{}, 
 	}
 
 	return fn(res)
-}
-
-// DiscardAndClose discards any unread bytes and closes the io.ReadCloser.
-func (c *Client) DiscardAndClose(r io.ReadCloser) {
-	io.Copy(io.Discard, r)
-	r.Close()
-}
-
-// Paragraph returns the contents of paragraph in the body of the HTML document.
-// It is best effort, and will return an empty string if there is no match. The
-// response body is read in its entirety, but is not closed.
-func (c *Client) Paragraph(r io.Reader) string {
-	var v string
-
-	doc, err := goquery.NewDocumentFromReader(r)
-
-	if err == nil {
-		doc.Find("body p").Each(func(_ int, s *goquery.Selection) {
-			v = s.Text()
-		})
-	}
-
-	return v
 }
