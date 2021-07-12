@@ -26,19 +26,32 @@ func main() {
 	defer c.Logout(ctx)
 
 	// Display a list of all minions.
-	c.Minions.All(ctx, printMinion)
+	c.Minions.All(ctx, func(id string, grains salt.Response) error {
+		log.Printf("Minion %s, os %s", id, grains.Get("osfinger"))
 
-	// Display a list of minions matching '*salt*'.
-	c.Minions.Filter(ctx, "*salt*", printMinion)
+		return nil
+	})
 
 	// Display a list of all jobs.
-	c.Jobs.All(ctx, printJob)
+	c.Jobs.All(ctx, func(id string, job salt.Response) error {
+		log.Printf("Job %s, user %s, target %s, function %s", id,
+			job.Get("User"),
+			job.Get("Target"),
+			job.Get("Function"),
+		)
+
+		return nil
+	})
 
 	// Ping all minions.
-	c.Ping(ctx, "*", printPong)
+	c.Ping(ctx, "*", func(id string, ok bool) error {
+		log.Printf("Minion %s, pong %t", id, ok)
+
+		return nil
+	})
 
 	// Collect disk usage on Ubuntu 18.04 minions with a 10 second timeout.
-	cmd := salt.Command{
+	var cmd = salt.Command{
 		Client:     "local",
 		Function:   "disk.usage",
 		Target:     "osfinger:Ubuntu-18.04",
@@ -46,7 +59,25 @@ func main() {
 		Timeout:    10,
 	}
 
-	c.Run(ctx, &cmd, printUsage)
+	// The return for disk.uage unfortunately encodes all values as strings.
+	var usage map[string]struct {
+		Available  int    `json:"available,string"`
+		Capacity   string `json:"capacity"`
+		Filesystem string `json:"filesystem"`
+		Used       int    `json:"used,string"`
+	}
+
+	c.Run(ctx, &cmd, func(id string, response salt.Response) error {
+		if err := response.Decode(&usage); err != nil {
+			log.Fatal(err)
+		}
+
+		for mount, info := range usage {
+			log.Println(id, mount, info.Filesystem, info.Used)
+		}
+
+		return nil
+	})
 
 	// Fire an event onto the bus.
 	c.Events.Fire(ctx, "salt-api-go/test", salt.Request{
@@ -57,50 +88,9 @@ func main() {
 	// Display events for 10 seconds.
 	ctx, _ = context.WithTimeout(ctx, time.Second*10)
 
-	c.Events.Stream(ctx, printEvent)
-}
+	c.Events.Stream(ctx, func(event salt.Response) error {
+		log.Printf("Event %s: %s", event.Get("tag"), string(event))
 
-func printMinion(id string, grains salt.Response) error {
-	log.Println(id, grains.Get("osfinger"), grains.Get("saltversion"))
-
-	return nil
-}
-
-func printJob(id string, job salt.Response) error {
-	log.Println(id, job.Get("User"), job.Get("Target"), job.Get("Function"), job.Get("Arguments"))
-
-	return nil
-}
-
-func printPong(id string, ok bool) error {
-	log.Println(id, ok)
-
-	return nil
-}
-
-func printUsage(id string, response salt.Response) error {
-	// The return from Salt for disk.uage unfortunately encodes all values as
-	// strings, even if they're integers, hence the `json:"<field>,string"`.
-	var usage map[string]struct {
-		Available  int    `json:"available,string"`
-		Capacity   string `json:"capacity"`
-		Filesystem string `json:"filesystem"`
-		Used       int    `json:"used,string"`
-	}
-
-	if err := response.Decode(&usage); err != nil {
-		log.Fatal(err)
-	}
-
-	for mount, info := range usage {
-		log.Println(id, mount, info.Filesystem, info.Used)
-	}
-
-	return nil
-}
-
-func printEvent(event salt.Response) error {
-	log.Println(event.Get("tag"), string(event))
-
-	return nil
+		return nil
+	})
 }
