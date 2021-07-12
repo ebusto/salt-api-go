@@ -37,11 +37,13 @@ func main() {
 	// Ping all minions.
 	c.Ping(ctx, "*", printPong)
 
-	// Execute the disk.usage function on minions matching '*salt*'.
+	// Collect disk usage on Ubuntu 18.04 minions with a 10 second timeout.
 	cmd := salt.Command{
-		Client:   "local",
-		Function: "disk.usage",
-		Target:   "*salt*",
+		Client:     "local",
+		Function:   "disk.usage",
+		Target:     "osfinger:Ubuntu-18.04",
+		TargetType: "grain",
+		Timeout:    10,
 	}
 
 	c.Run(ctx, &cmd, printUsage)
