@@ -43,6 +43,13 @@ func main() {
 		return nil
 	})
 
+	// Display a list of all accepted minion keys.
+	c.Keys.ListAccepted(ctx, func(id string) error {
+		log.Printf("Minion %s", id)
+
+		return nil
+	})
+
 	// Ping all minions.
 	c.Ping(ctx, "*", func(id string, ok bool) error {
 		log.Printf("Minion %s, pong %t", id, ok)
