@@ -9,7 +9,8 @@ type Command struct {
 	Arguments  []string `json:"arg,omitempty"`
 	Client     string   `json:"client"`
 	Function   string   `json:"fun"`
-	Target     string   `json:"tgt"`
+	Match      string   `json:"match,omitempty"`
+	Target     string   `json:"tgt,omitempty"`
 	TargetType string   `json:"tgt_type,omitempty"`
 	Timeout    int      `json:"timeout,omitempty"`
 }

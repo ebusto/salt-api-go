@@ -60,6 +60,26 @@ func TestClient(t *testing.T) {
 		t.Logf("Seen %d jobs.", len(jobs))
 	})
 
+	t.Run("Keys", func(t *testing.T) {
+		var minions []string
+
+		fn := func(name string) error {
+			minions = append(minions, name)
+
+			return nil
+		}
+
+		if err := c.Keys.ListAccepted(ctx, fn); err != nil {
+			t.Fatal(err)
+		}
+
+		if len(minions) == 0 {
+			t.Fatalf("No minion keys were returned.")
+		}
+
+		t.Logf("Seen %d minion keys: %s", len(minions), minions)
+	})
+
 	t.Run("Minions", func(t *testing.T) {
 		var minions []string
 
@@ -113,6 +133,8 @@ func TestClient(t *testing.T) {
 			t.Fatalf("No events were returned.")
 		}
 	})
+
+	_ = time.Now()
 
 	t.Run("Logout", func(t *testing.T) {
 		if err := c.Logout(ctx); err != nil {

@@ -45,8 +45,10 @@ func readReturn(r io.Reader, fn ReturnFunc) error {
 			return err
 		}
 
-		if err := fn(id, data); err != nil {
-			return err
+		if fn != nil {
+			if err := fn(id, data); err != nil {
+				return err
+			}
 		}
 	}
 

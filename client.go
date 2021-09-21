@@ -17,6 +17,7 @@ type Client struct {
 
 	Events  *Events
 	Jobs    *Jobs
+	Keys    *Keys
 	Minions *Minions
 }
 
@@ -39,6 +40,7 @@ func New(server string) *Client {
 
 	c.Events = &Events{c}
 	c.Jobs = &Jobs{c}
+	c.Keys = &Keys{c}
 	c.Minions = &Minions{c}
 
 	return c
