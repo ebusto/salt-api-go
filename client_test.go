@@ -3,6 +3,7 @@ package salt
 import (
 	"context"
 	"os"
+	"reflect"
 	"testing"
 	"time"
 )
@@ -105,6 +106,46 @@ func TestClient(t *testing.T) {
 	t.Run("Ping", func(t *testing.T) {
 		err := c.Ping(ctx, "*", func(id string, ok bool) error {
 			t.Logf("Ping: ID = %s, OK = %v", id, ok)
+
+			return nil
+		})
+
+		if err != nil {
+			t.Fatal(err)
+		}
+	})
+
+	t.Run("Run", func(t *testing.T) {
+		type TestArgReturn struct {
+			Arguments []string `json:"args"`
+			Keywords  Object   `json:"kwargs"`
+		}
+
+		cmd := Command{
+			Arguments: []string{"a1", "a2"},
+			Function:  "test.arg_clean",
+			Keywords:  Object{"k1": 1, "k2": false},
+			Target:    "*",
+			Timeout:   10,
+		}
+
+		exp := TestArgReturn{
+			Arguments: []string{"a1", "a2"},
+			Keywords:  Object{"k1": float64(1), "k2": false},
+		}
+
+		err := c.Run(ctx, &cmd, func(id string, response Response) error {
+			var ret TestArgReturn
+
+			if err := response.Decode(&ret); err != nil {
+				return err
+			}
+
+			t.Logf("Run: ID = %s, return = %v", id, ret)
+
+			if !reflect.DeepEqual(exp, ret) {
+				t.Fatalf("Run: expected = %v, received = %v", exp, ret)
+			}
 
 			return nil
 		})

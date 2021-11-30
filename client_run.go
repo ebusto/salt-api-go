@@ -5,10 +5,13 @@ import (
 	"net/http"
 )
 
+type Object map[string]interface{}
+
 type Command struct {
 	Arguments  []string `json:"arg,omitempty"`
 	Client     string   `json:"client"`
 	Function   string   `json:"fun"`
+	Keywords   Object   `json:"kwarg,omitempty"`
 	Match      string   `json:"match,omitempty"`
 	Target     string   `json:"tgt,omitempty"`
 	TargetType string   `json:"tgt_type,omitempty"`
