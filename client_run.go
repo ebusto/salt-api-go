@@ -19,12 +19,20 @@ type Command struct {
 }
 
 func (c *Client) Run(ctx context.Context, cmd *Command, fn ReturnFunc) error {
+	return c.run(ctx, cmd, fn, false)
+}
+
+func (c *Client) RunRaw(ctx context.Context, cmd *Command, fn ReturnFunc) error {
+	return c.run(ctx, cmd, fn, true)
+}
+
+func (c *Client) run(ctx context.Context, cmd *Command, fn ReturnFunc, raw bool) error {
 	// The "local" client is the most common.
 	if cmd.Client == "" {
 		cmd.Client = "local"
 	}
 
 	return c.do(ctx, "POST", "/", cmd, func(r *http.Response) error {
-		return readReturn(r.Body, fn)
+		return readReturn(r.Body, fn, raw)
 	})
 }

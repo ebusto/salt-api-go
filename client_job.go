@@ -11,12 +11,12 @@ type Jobs struct {
 
 func (c *Jobs) All(ctx context.Context, fn ReturnFunc) error {
 	return c.do(ctx, "GET", "jobs", nil, func(r *http.Response) error {
-		return readReturn(r.Body, fn)
+		return readReturn(r.Body, fn, false)
 	})
 }
 
 func (c *Jobs) Filter(ctx context.Context, id string, fn ReturnFunc) error {
 	return c.do(ctx, "GET", "jobs/"+id, nil, func(r *http.Response) error {
-		return readReturn(r.Body, fn)
+		return readReturn(r.Body, fn, false)
 	})
 }

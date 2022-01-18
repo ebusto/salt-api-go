@@ -9,8 +9,21 @@ import (
 
 type ReturnFunc func(string, Response) error
 
-func readReturn(r io.Reader, fn ReturnFunc) error {
+func readReturn(r io.Reader, fn ReturnFunc, raw bool) error {
 	dec := json.NewDecoder(r)
+
+	// When use the "runner" client, return values aren't in the typical
+	// return format. Instead, return the raw output, which is often a simple
+	// boolean value.
+	if raw {
+		b, err := io.ReadAll(r)
+
+		if err != nil {
+			return err
+		}
+
+		return fn("", Response(b))
+	}
 
 	// A well formed return looks like:
 	//   { "return": [{ string(<id>): object(<value>), ... }] }
