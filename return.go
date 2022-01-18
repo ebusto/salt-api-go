@@ -20,10 +20,10 @@ func readReturn(r io.Reader, fn ReturnFunc, format Format) error {
 	dec := json.NewDecoder(r)
 
 	// Object return:
-	//   { "return": [{ string(<id>): object(<value>), ... }] }
+	//   { "return": [ { string(<id>): object(<value>), ... } ] }
 	//
 	// Runner return:
-	//   { "return": [<value>] }
+	//   { "return": [ <value> ] }
 	var tokens = []json.Token{
 		json.Delim('{'),
 		json.Token("return"),
@@ -71,13 +71,12 @@ func readReturn(r io.Reader, fn ReturnFunc, format Format) error {
 		}
 	}
 
-	tokens = []json.Token{
-		json.Delim('}'),
-		json.Delim(']'),
-	}
+	switch format {
+	case FormatObject:
+		tokens = []json.Token{json.Delim('}'), json.Delim(']'), json.Delim('}')}
 
-	if format == FormatObject {
-		tokens = append(tokens, json.Delim('}'))
+	case FormatRunner:
+		tokens = []json.Token{json.Delim(']'), json.Delim('}')}
 	}
 
 	return readTokens(dec, tokens)
