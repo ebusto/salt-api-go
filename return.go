@@ -7,34 +7,34 @@ import (
 	"reflect"
 )
 
+type Format int
+
+const (
+	FormatObject Format = iota
+	FormatRunner
+)
+
 type ReturnFunc func(string, Response) error
 
-func readReturn(r io.Reader, fn ReturnFunc, raw bool) error {
+func readReturn(r io.Reader, fn ReturnFunc, format Format) error {
 	dec := json.NewDecoder(r)
 
-	// When use the "runner" client, return values aren't in the typical
-	// return format. Instead, return the raw output, which is often a simple
-	// boolean value.
-	if raw {
-		b, err := io.ReadAll(r)
-
-		if err != nil {
-			return err
-		}
-
-		return fn("", Response(b))
-	}
-
-	// A well formed return looks like:
+	// Object return:
 	//   { "return": [{ string(<id>): object(<value>), ... }] }
-	err := readTokens(dec, []json.Token{
+	//
+	// Runner return:
+	//   { "return": [<value>] }
+	var tokens = []json.Token{
 		json.Delim('{'),
 		json.Token("return"),
 		json.Delim('['),
-		json.Delim('{'),
-	})
+	}
 
-	if err != nil {
+	if format == FormatObject {
+		tokens = append(tokens, json.Delim('{'))
+	}
+
+	if err := readTokens(dec, tokens); err != nil {
 		return err
 	}
 
@@ -42,16 +42,22 @@ func readReturn(r io.Reader, fn ReturnFunc, raw bool) error {
 	var data Response
 
 	for dec.More() {
-		t, err := dec.Token()
+		var id string
 
-		if err != nil {
-			return err
-		}
+		if format == FormatObject {
+			t, err := dec.Token()
 
-		id, ok := t.(string)
+			if err != nil {
+				return err
+			}
 
-		if !ok {
-			return fmt.Errorf("expected string, received %s", t)
+			v, ok := t.(string)
+
+			if !ok {
+				return fmt.Errorf("expected string, received %s", t)
+			}
+
+			id = v
 		}
 
 		if err := dec.Decode(&data); err != nil {
@@ -65,11 +71,16 @@ func readReturn(r io.Reader, fn ReturnFunc, raw bool) error {
 		}
 	}
 
-	return readTokens(dec, []json.Token{
+	tokens = []json.Token{
 		json.Delim('}'),
 		json.Delim(']'),
-		json.Delim('}'),
-	})
+	}
+
+	if format == FormatObject {
+		tokens = append(tokens, json.Delim('}'))
+	}
+
+	return readTokens(dec, tokens)
 }
 
 // readTokens reads the expected sequence of JSON tokens from the decoder,
