@@ -9,7 +9,7 @@ import (
 
 type Response []byte
 
-func (m *Response) Decode(v interface{}) error {
+func (m *Response) Decode(v any) error {
 	return json.Unmarshal(*m, v)
 }
 

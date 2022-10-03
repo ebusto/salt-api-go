@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-type Object map[string]interface{}
+type Object map[string]any
 
 type Command struct {
 	Arguments  []string `json:"arg,omitempty"`

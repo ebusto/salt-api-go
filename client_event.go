@@ -13,7 +13,7 @@ type Events struct {
 
 type EventStreamFunc func(Response) error
 
-func (c *Events) Fire(ctx context.Context, tag string, data interface{}) error {
+func (c *Events) Fire(ctx context.Context, tag string, data any) error {
 	req := Request{
 		"client": "runner", "fun": "event.send", "tag": tag, "data": data,
 	}

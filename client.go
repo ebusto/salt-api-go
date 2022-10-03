@@ -48,7 +48,7 @@ func New(server string) *Client {
 
 type responseFunc func(*http.Response) error
 
-func (c *Client) do(ctx context.Context, method, path string, data interface{}, fn responseFunc) error {
+func (c *Client) do(ctx context.Context, method, path string, data any, fn responseFunc) error {
 	var buf bytes.Buffer
 
 	if data != nil {
