@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/ebusto/salt-api-go"
+	"github.com/ebusto/salt-api-go/event"
 )
 
 func main() {
@@ -95,8 +96,19 @@ func main() {
 	// Display events for 10 seconds.
 	ctx, _ = context.WithTimeout(ctx, time.Second*10)
 
-	c.Events.Stream(ctx, func(event salt.Response) error {
-		log.Printf("Event %s: %s", event.Get("tag"), string(event))
+	p := event.NewParser()
+
+	c.Events.Stream(ctx, func(r salt.Response) error {
+		event, err := p.Parse(r)
+
+		if err != nil {
+			return err
+		}
+
+		// A nil event indicates an unhandled event.
+		if event != nil {
+			log.Printf("%#v", event)
+		}
 
 		return nil
 	})

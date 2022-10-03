@@ -14,19 +14,7 @@ import (
 func TestParse(t *testing.T) {
 	p := NewParser()
 
-	p.OnEvent = func(e any) error {
-		fmt.Printf("event: %s\n", pretty.Sprint(e))
-
-		return nil
-	}
-
-	p.OnUnknown = func(e salt.Response) error {
-		fmt.Printf("unknown: %s\n", e.Get("tag").String())
-
-		return nil
-	}
-
-	fh, err := os.Open("sample.json")
+	fh, err := os.Open("testdata/sample.json")
 
 	if err != nil {
 		t.Fatal(err)
@@ -45,8 +33,16 @@ func TestParse(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if err := p.Parse(r); err != nil {
+		event, err := p.Parse(r)
+
+		if err != nil {
 			t.Fatal(err)
+		}
+
+		if event == nil {
+			fmt.Printf("unhandled: %s", r.Get("tag"))
+		} else {
+			fmt.Printf("event: %s", pretty.Sprint(event))
 		}
 	}
 }

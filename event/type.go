@@ -6,6 +6,9 @@ import (
 	"github.com/ebusto/salt-api-go"
 )
 
+// Event represents a parsed event.
+type Event interface{}
+
 type JobNew struct {
 	Arguments  []string      `json:"arg"`
 	Function   string        `json:"fun"`
@@ -74,7 +77,7 @@ type PresencePresent struct {
 }
 
 // https://docs.saltstack.com/en/latest/topics/event/master_events.html
-var Types = map[*regexp.Regexp]func() any{
+var Types = map[*regexp.Regexp]func() Event{
 	regexp.MustCompile(`minion/refresh/(?P<id>[^/]+)`):      New[MinionRefresh],
 	regexp.MustCompile(`salt/auth`):                         New[MinionAuth],
 	regexp.MustCompile(`salt/beacon/[^/]+/(?P<name>[^/]+)`): New[MinionBeacon],
@@ -87,6 +90,6 @@ var Types = map[*regexp.Regexp]func() any{
 }
 
 // New returns a new event of the specified type.
-func New[T any]() any {
+func New[T any]() Event {
 	return new(T)
 }

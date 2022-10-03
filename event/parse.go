@@ -6,59 +6,48 @@ import (
 	"github.com/ebusto/salt-api-go"
 )
 
-type (
-	HandleEvent   func(any) error
-	HandleUnknown func(salt.Response) error
-)
-
 // Parser represents an event parser.
 type Parser struct {
-	OnEvent   HandleEvent
-	OnUnknown HandleUnknown
-}
-
-func NewParser() *Parser {
-	return &Parser{
-		OnEvent: func(_ any) error {
-			return nil
-		},
-
-		OnUnknown: func(_ salt.Response) error {
-			return nil
-		},
-	}
-}
-
-func (p *Parser) Parse(r salt.Response) error {
-	var event struct {
+	Buffer struct {
 		Data salt.Response `json:"data"`
 		Tag  string        `json:"tag"`
 	}
+}
 
-	if err := r.Decode(&event); err != nil {
-		return err
+// NewParser returns a new event parser.
+func NewParser() *Parser {
+	return &Parser{}
+}
+
+// Parse returns the event parsed from the Salt response. If the tag is not
+// registered, then the event will be nil.
+func (p *Parser) Parse(r salt.Response) (Event, error) {
+	if err := r.Decode(&p.Buffer); err != nil {
+		return nil, err
 	}
 
 	for re, fn := range Types {
-		if !re.MatchString(event.Tag) {
+		if !re.MatchString(p.Buffer.Tag) {
 			continue
 		}
 
-		// Extract named captures.
-		match := re.FindStringSubmatch(event.Tag)
+		event := fn()
+
+		// Most fields are populated when decoding into the event structure.
+		if err := p.Buffer.Data.Decode(&event); err != nil {
+			return nil, err
+		}
+
+		// Some fields must be populated by parsing the tag.
+		match := re.FindStringSubmatch(p.Buffer.Tag)
 		names := make(map[string]string)
 
+		// Extract named captures.
 		for n, name := range re.SubexpNames() {
 			names[name] = match[n]
 		}
 
-		e := fn()
-
-		if err := event.Data.Decode(&e); err != nil {
-			return err
-		}
-
-		v := reflect.ValueOf(e).Elem()
+		v := reflect.ValueOf(event).Elem()
 
 		for i := 0; i < v.NumField(); i++ {
 			// Retrieve the field value.
@@ -68,15 +57,15 @@ func (p *Parser) Parse(r salt.Response) error {
 			t := v.Type().Field(i)
 
 			// Use the tagged name as the key.
-			key := t.Tag.Get("name")
+			k := t.Tag.Get("name")
 
-			if value, ok := names[key]; ok && len(key) > 0 {
-				f.SetString(value)
+			if v, ok := names[k]; ok && len(k) > 0 {
+				f.SetString(v)
 			}
 		}
 
-		return p.OnEvent(e)
+		return event, nil
 	}
 
-	return p.OnUnknown(r)
+	return nil, nil
 }
