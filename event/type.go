@@ -9,6 +9,24 @@ import (
 // Event represents a parsed event.
 type Event interface{}
 
+// https://docs.saltstack.com/en/latest/topics/event/master_events.html
+var Types = map[*regexp.Regexp]func() Event{
+	regexp.MustCompile(`minion/refresh/(?P<id>[^/]+)`):      New[MinionRefresh],
+	regexp.MustCompile(`salt/auth`):                         New[MinionAuth],
+	regexp.MustCompile(`salt/beacon/[^/]+/(?P<name>[^/]+)`): New[MinionBeacon],
+	regexp.MustCompile(`salt/job/\d+/new`):                  New[JobNew],
+	regexp.MustCompile(`salt/job/\d+/ret`):                  New[JobReturn],
+	regexp.MustCompile(`salt/key`):                          New[MinionKey],
+	regexp.MustCompile(`salt/minion/[^/]+/start`):           New[MinionStart],
+	regexp.MustCompile(`salt/presence/change`):              New[PresenceChange],
+	regexp.MustCompile(`salt/presence/present`):             New[PresencePresent],
+}
+
+// New returns a new event of the specified type.
+func New[T any]() Event {
+	return new(T)
+}
+
 type JobNew struct {
 	Arguments  []string      `json:"arg"`
 	Function   string        `json:"fun"`
@@ -74,22 +92,4 @@ type PresenceChange struct {
 type PresencePresent struct {
 	Minions []string `json:"present"`
 	Time    Time     `json:"_stamp"`
-}
-
-// https://docs.saltstack.com/en/latest/topics/event/master_events.html
-var Types = map[*regexp.Regexp]func() Event{
-	regexp.MustCompile(`minion/refresh/(?P<id>[^/]+)`):      New[MinionRefresh],
-	regexp.MustCompile(`salt/auth`):                         New[MinionAuth],
-	regexp.MustCompile(`salt/beacon/[^/]+/(?P<name>[^/]+)`): New[MinionBeacon],
-	regexp.MustCompile(`salt/job/\d+/new`):                  New[JobNew],
-	regexp.MustCompile(`salt/job/\d+/ret`):                  New[JobReturn],
-	regexp.MustCompile(`salt/key`):                          New[MinionKey],
-	regexp.MustCompile(`salt/minion/[^/]+/start`):           New[MinionStart],
-	regexp.MustCompile(`salt/presence/change`):              New[PresenceChange],
-	regexp.MustCompile(`salt/presence/present`):             New[PresencePresent],
-}
-
-// New returns a new event of the specified type.
-func New[T any]() Event {
-	return new(T)
 }
