@@ -5,6 +5,22 @@ import (
 	"time"
 )
 
+type Duration struct {
+	time.Duration
+}
+
+func (d *Duration) UnmarshalJSON(data []byte) error {
+	var val float64
+
+	if err := json.Unmarshal(data, &val); err != nil {
+		return nil
+	}
+
+	d.Duration = time.Duration(val) * time.Millisecond
+
+	return nil
+}
+
 type Time struct {
 	time.Time
 }
