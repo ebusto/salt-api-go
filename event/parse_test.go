@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"testing"
 
@@ -43,6 +44,20 @@ func TestParse(t *testing.T) {
 			fmt.Printf("unhandled: %s", r.Get("tag"))
 		} else {
 			fmt.Printf("event: %s", pretty.Sprint(event))
+		}
+
+		if e, ok := event.(*JobReturn); ok {
+			if e.Output == "highstate" {
+				res, err := e.HighState()
+
+				if err != nil {
+					log.Fatal(err)
+				}
+
+				for _, r := range res {
+					log.Printf("[%s] res: %s", r.Duration, pretty.Sprint(r))
+				}
+			}
 		}
 	}
 }
