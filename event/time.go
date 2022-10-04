@@ -2,6 +2,7 @@ package event
 
 import (
 	"encoding/json"
+	"fmt"
 	"time"
 )
 
@@ -10,15 +11,16 @@ type Duration struct {
 }
 
 func (d *Duration) UnmarshalJSON(data []byte) error {
+	var err error
 	var val float64
 
 	if err := json.Unmarshal(data, &val); err != nil {
 		return nil
 	}
 
-	d.Duration = time.Duration(val) * time.Millisecond
+	d.Duration, err = time.ParseDuration(fmt.Sprintf("%fms", val))
 
-	return nil
+	return err
 }
 
 type Time struct {
