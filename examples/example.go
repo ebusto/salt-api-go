@@ -94,7 +94,9 @@ func main() {
 	})
 
 	// Display events for 10 seconds.
-	ctx, _ = context.WithTimeout(ctx, time.Second*10)
+	ctx, cancel := context.WithTimeout(ctx, time.Second*10)
+
+	defer cancel()
 
 	p := event.NewParser()
 
