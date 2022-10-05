@@ -107,7 +107,8 @@ func main() {
 			return err
 		}
 
-		// A nil event indicates an unhandled event.
+		// A nil event indicates an event with a tag that did not match a
+		// known pattern.
 		if event != nil {
 			log.Printf("%#v", event)
 		}

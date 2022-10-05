@@ -7,7 +7,7 @@ require (
 	github.com/kr/pretty v0.3.0
 	github.com/tidwall/gjson v1.14.3
 	github.com/tidwall/pretty v1.2.1
-	golang.org/x/exp v0.0.0-20221004191654-4bbd8505dc59
+	golang.org/x/exp v0.0.0-20221004215720-b9f4876ce741
 )
 
 require (
