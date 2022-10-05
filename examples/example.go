@@ -100,8 +100,8 @@ func main() {
 
 	p := event.NewParser()
 
-	c.Events.Stream(ctx, func(r salt.Response) error {
-		event, err := p.Parse(r)
+	c.Events.Stream(ctx, func(response salt.Response) error {
+		event, err := p.Parse(response)
 
 		if err != nil {
 			return err
