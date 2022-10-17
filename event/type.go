@@ -28,7 +28,7 @@ func New[T any]() Event {
 }
 
 type JobNew struct {
-	Arguments  []string      `json:"arg"`
+	Arguments  []any         `json:"arg"`
 	Function   string        `json:"fun"`
 	Job        string        `json:"jid"`
 	Minions    []string      `json:"minions"`
