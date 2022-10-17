@@ -39,7 +39,7 @@ type JobNew struct {
 }
 
 type JobReturn struct {
-	Arguments  []string      `json:"fun_args"`
+	Arguments  []any         `json:"fun_args"`
 	Command    string        `json:"cmd"`
 	Function   string        `json:"fun"`
 	Job        string        `json:"jid"`
