@@ -2,7 +2,6 @@ package event
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -40,11 +39,11 @@ func TestParse(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		if event == nil {
-			fmt.Printf("unhandled: %s", r.Get("tag"))
-		} else {
-			fmt.Printf("event: %s", pretty.Sprint(event))
-		}
+		//if event == nil {
+		//	fmt.Printf("unhandled: %s", r.Get("tag"))
+		//} else {
+		//	fmt.Printf("event: %s", pretty.Sprint(event))
+		//}
 
 		if e, ok := event.(*JobReturn); ok {
 			if e.Output == "highstate" {

@@ -11,7 +11,7 @@ type HighStateResult struct {
 	Changes  map[string]any `json:"changes"`
 	Comment  string         `json:"comment"`
 	Duration Duration       `json:"duration"`
-	Function string         `json:"-"`
+	Function string         `json:"function"`
 	ID       string         `json:"__id__"`
 	Name     string         `json:"name"`
 	Order    int            `json:"__run_num__"`
