@@ -1,10 +1,10 @@
 package event
 
 import (
+	"cmp"
 	"encoding/json"
+	"slices"
 	"strings"
-
-	"golang.org/x/exp/slices"
 )
 
 type HighStateResult struct {
@@ -39,8 +39,8 @@ func (e *JobReturn) HighState() ([]HighStateResult, error) {
 		results = append(results, r)
 	}
 
-	slices.SortFunc(results, func(a, b HighStateResult) bool {
-		return a.Order < b.Order
+	slices.SortFunc(results, func(a, b HighStateResult) int {
+		return cmp.Compare(a.Order, b.Order)
 	})
 
 	return results, nil
