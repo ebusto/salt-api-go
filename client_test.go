@@ -3,9 +3,10 @@ package salt
 import (
 	"context"
 	"os"
-	"reflect"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestClient(t *testing.T) {
@@ -30,13 +31,9 @@ func TestClient(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("Login", func(t *testing.T) {
-		if err := c.Login(ctx, username, password); err != nil {
-			t.Fatal(err)
-		}
+		assert.Nil(t, c.Login(ctx, username, password))
 
-		if len(c.Token) == 0 {
-			t.Fatalf("Auth token was not set.")
-		}
+		assert.NotEmpty(t, c.Token)
 	})
 
 	t.Run("Jobs", func(t *testing.T) {
@@ -50,13 +47,9 @@ func TestClient(t *testing.T) {
 			return nil
 		}
 
-		if err := c.Jobs.All(ctx, fn); err != nil {
-			t.Fatal(err)
-		}
+		assert.Nil(t, c.Jobs.All(ctx, fn))
 
-		if len(jobs) == 0 {
-			t.Fatalf("No jobs were returned.")
-		}
+		assert.NotEmpty(t, jobs)
 
 		t.Logf("Seen %d jobs.", len(jobs))
 	})
@@ -70,13 +63,8 @@ func TestClient(t *testing.T) {
 			return nil
 		}
 
-		if err := c.Keys.ListAccepted(ctx, fn); err != nil {
-			t.Fatal(err)
-		}
-
-		if len(minions) == 0 {
-			t.Fatalf("No minion keys were returned.")
-		}
+		assert.Nil(t, c.Keys.ListAccepted(ctx, fn))
+		assert.NotEmpty(t, minions)
 
 		t.Logf("Seen %d minion keys: %s", len(minions), minions)
 	})
@@ -92,13 +80,8 @@ func TestClient(t *testing.T) {
 			return nil
 		}
 
-		if err := c.Minions.All(ctx, fn); err != nil {
-			t.Fatal(err)
-		}
-
-		if len(minions) == 0 {
-			t.Fatalf("No minions were returned.")
-		}
+		assert.Nil(t, c.Minions.All(ctx, fn))
+		assert.NotEmpty(t, minions)
 
 		t.Logf("Seen %d minions.", len(minions))
 	})
@@ -110,9 +93,7 @@ func TestClient(t *testing.T) {
 			return nil
 		})
 
-		if err != nil {
-			t.Fatal(err)
-		}
+		assert.Nil(t, err)
 	})
 
 	t.Run("Run", func(t *testing.T) {
@@ -143,16 +124,12 @@ func TestClient(t *testing.T) {
 
 			t.Logf("Run: ID = %s, return = %v", id, ret)
 
-			if !reflect.DeepEqual(exp, ret) {
-				t.Fatalf("Run: expected = %v, received = %v", exp, ret)
-			}
+			assert.Equal(t, exp, ret)
 
 			return nil
 		})
 
-		if err != nil {
-			t.Fatal(err)
-		}
+		assert.Nil(t, err)
 	})
 
 	t.Run("Events", func(t *testing.T) {
@@ -170,24 +147,18 @@ func TestClient(t *testing.T) {
 			return nil
 		})
 
-		if seen == 0 {
-			t.Fatalf("No events were returned.")
-		}
+		assert.NotEmpty(t, seen)
 	})
 
 	_ = time.Now()
 
 	t.Run("Logout", func(t *testing.T) {
-		if err := c.Logout(ctx); err != nil {
-			t.Fatal(err)
-		}
+		assert.Nil(t, c.Logout(ctx))
 
 		err := c.Minions.All(ctx, func(_ string, _ Response) error {
 			return nil
 		})
 
-		if err == nil {
-			t.Fatalf("Expected error when listing minions after logout.")
-		}
+		assert.NotNil(t, err)
 	})
 }

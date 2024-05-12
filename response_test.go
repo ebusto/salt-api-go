@@ -2,37 +2,39 @@ package salt
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var testData = []byte(`
-	{ "id": "minion" }
+	{ "id": "minion", "foo": "bar" }
+
 `)
 
 type testStruct struct {
-	ID string `json:"id"`
+	ID  string `json:"id"`
+	Foo string `json:"foo"`
 }
 
 func TestResponse(t *testing.T) {
 	var r = new(Response)
 	var s testStruct
 
-	if err := r.UnmarshalJSON(testData); err != nil {
-		t.Fatalf("UnmarshalJSON: %s", err)
-	}
+	assert.Nil(t, r.UnmarshalJSON(testData))
 
-	if !r.Has("id") {
-		t.Fatal("Has id = false")
-	}
+	assert.True(t, r.Has("id"))
 
-	if r.Get("id").String() != "minion" {
-		t.Fatalf("Get 'id', expected minion, received %s", r.Get("id"))
-	}
+	assert.Equal(t, r.Get("id").String(), "minion")
 
-	if err := r.Decode(&s); err != nil {
-		t.Fatalf("Decode: %s", err)
-	}
+	assert.Nil(t, r.Decode(&s))
 
-	if s.ID != "minion" {
-		t.Fatalf("Struct ID = %s", s.ID)
-	}
+	assert.Equal(t, s.ID, "minion")
+
+	assert.True(t, r.Has("foo"))
+
+	v := r.Delete("foo")
+
+	assert.False(t, r.Has("foo"))
+
+	assert.Equal(t, v.String(), "bar")
 }

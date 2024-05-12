@@ -1,8 +1,9 @@
 package salt
 
 import (
-	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestError(t *testing.T) {
@@ -12,8 +13,6 @@ func TestError(t *testing.T) {
 	}
 
 	for exp, err := range tests {
-		if !reflect.DeepEqual(exp, err.Error()) {
-			t.Fatalf("expected %s, received %s", exp, err.Error())
-		}
+		assert.Equal(t, exp, err.Error())
 	}
 }

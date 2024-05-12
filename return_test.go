@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestReadTokens(t *testing.T) {
@@ -18,11 +20,7 @@ func TestReadTokens(t *testing.T) {
 
 	dec := json.NewDecoder(strings.NewReader(doc))
 
-	if err := readTokens(dec, seq); err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, readTokens(dec, seq))
 
-	if err := readTokens(dec, []json.Token{json.Delim('{')}); err == nil {
-		t.Fatalf("Expected error, none returned.")
-	}
+	assert.NotNil(t, readTokens(dec, []json.Token{json.Delim('{')}))
 }

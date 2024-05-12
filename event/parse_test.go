@@ -9,6 +9,7 @@ import (
 
 	"github.com/ebusto/salt-api-go"
 	"github.com/kr/pretty"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParse(t *testing.T) {
@@ -35,15 +36,7 @@ func TestParse(t *testing.T) {
 
 		event, err := p.Parse(r)
 
-		if err != nil {
-			t.Fatal(err)
-		}
-
-		//if event == nil {
-		//	fmt.Printf("unhandled: %s", r.Get("tag"))
-		//} else {
-		//	fmt.Printf("event: %s", pretty.Sprint(event))
-		//}
+		assert.Nil(t, err)
 
 		if e, ok := event.(*JobReturn); ok {
 			if e.Output == "highstate" {

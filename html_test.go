@@ -3,6 +3,8 @@ package salt
 import (
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestHtmlParagraph(t *testing.T) {
@@ -54,9 +56,8 @@ func TestHtmlParagraph(t *testing.T) {
 	}
 
 	for body, expect := range tests {
-		message := htmlParagraph(strings.NewReader(body))
-		if expect != message {
-			t.Fatalf("expected %s, received %s", expect, message)
-		}
+		actual := htmlParagraph(strings.NewReader(body))
+
+		assert.Equal(t, expect, actual)
 	}
 }
