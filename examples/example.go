@@ -35,7 +35,8 @@ func main() {
 
 	// Display a list of all jobs.
 	c.Jobs.All(ctx, func(id string, job salt.Response) error {
-		log.Printf("Job %s, user %s, target %s, function %s", id,
+		log.Printf("Job %s, time %s, user %s, target %s, function %s", id,
+			job.Get("StartTime"),
 			job.Get("User"),
 			job.Get("Target"),
 			job.Get("Function"),
