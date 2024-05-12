@@ -5,12 +5,21 @@ import (
 
 	"github.com/tidwall/gjson"
 	"github.com/tidwall/pretty"
+	"github.com/tidwall/sjson"
 )
 
 type Response []byte
 
 func (m *Response) Decode(v any) error {
 	return json.Unmarshal(*m, v)
+}
+
+func (m *Response) Delete(path string) gjson.Result {
+	r := gjson.GetBytes(*m, path)
+
+	*m, _ = sjson.DeleteBytes(*m, path)
+
+	return r
 }
 
 func (m *Response) Get(path string) gjson.Result {
