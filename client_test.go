@@ -10,12 +10,13 @@ import (
 )
 
 func TestClient(t *testing.T) {
-	var server, username, password string
+	var server, username, password, method string
 
 	var values = map[string]*string{
-		"SALTAPI_URL":  &server,
-		"SALTAPI_USER": &username,
-		"SALTAPI_PASS": &password,
+		"SALTAPI_URL":   &server,
+		"SALTAPI_USER":  &username,
+		"SALTAPI_PASS":  &password,
+		"SALTAPI_EAUTH": &method,
 	}
 
 	for k, v := range values {
@@ -31,7 +32,7 @@ func TestClient(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("Login", func(t *testing.T) {
-		assert.Nil(t, c.Login(ctx, username, password))
+		assert.Nil(t, c.Login(ctx, username, password, method))
 
 		assert.NotEmpty(t, c.Token)
 	})

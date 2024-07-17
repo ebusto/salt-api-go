@@ -18,6 +18,7 @@ func main() {
 	err := c.Login(ctx,
 		os.Getenv("SALTAPI_USER"),
 		os.Getenv("SALTAPI_PASS"),
+		os.Getenv("SALTAPI_EAUTH"),
 	)
 
 	if err != nil {

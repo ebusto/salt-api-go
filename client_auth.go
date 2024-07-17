@@ -5,11 +5,12 @@ import (
 	"net/http"
 )
 
-func (c *Client) Login(ctx context.Context, username, password string) error {
+// Login authenticates using the specified credentials and method.
+func (c *Client) Login(ctx context.Context, username, password, method string) error {
 	req := Request{
 		"username": username,
 		"password": password,
-		"eauth":    "pam",
+		"eauth":    method,
 	}
 
 	return c.do(ctx, "POST", "login", req, func(r *http.Response) error {
