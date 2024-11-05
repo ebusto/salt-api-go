@@ -16,6 +16,7 @@ type Command struct {
 	Target     string   `json:"tgt,omitempty"`
 	TargetType string   `json:"tgt_type,omitempty"`
 	Timeout    int      `json:"timeout,omitempty"`
+	Batch      string   `json:"batch,omitempty"`
 }
 
 func (c *Client) Run(ctx context.Context, cmd *Command, fn ReturnFunc) error {
@@ -25,9 +26,15 @@ func (c *Client) Run(ctx context.Context, cmd *Command, fn ReturnFunc) error {
 	if cmd.Client == "" {
 		cmd.Client = "local"
 	}
+	if cmd.Batch != "" {
+		cmd.Client = "local_batch"
+	}
 
 	if cmd.Client == "runner" {
 		format = FormatRunner
+	}
+	if cmd.Client == "local_batch" {
+		format = FormatBatch
 	}
 
 	return c.do(ctx, "POST", "/", cmd, func(r *http.Response) error {
