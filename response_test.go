@@ -8,7 +8,6 @@ import (
 
 var testData = []byte(`
 	{ "id": "minion", "foo": "bar" }
-
 `)
 
 type testStruct struct {

@@ -9,6 +9,7 @@ type Object map[string]any
 
 type Command struct {
 	Arguments  []string `json:"arg,omitempty"`
+	Batch      string   `json:"batch,omitempty"`
 	Client     string   `json:"client"`
 	Function   string   `json:"fun"`
 	Keywords   Object   `json:"kwarg,omitempty"`
@@ -16,7 +17,6 @@ type Command struct {
 	Target     string   `json:"tgt,omitempty"`
 	TargetType string   `json:"tgt_type,omitempty"`
 	Timeout    int      `json:"timeout,omitempty"`
-	Batch      string   `json:"batch,omitempty"`
 }
 
 func (c *Client) Run(ctx context.Context, cmd *Command, fn ReturnFunc) error {
@@ -26,15 +26,17 @@ func (c *Client) Run(ctx context.Context, cmd *Command, fn ReturnFunc) error {
 	if cmd.Client == "" {
 		cmd.Client = "local"
 	}
+
 	if cmd.Batch != "" {
 		cmd.Client = "local_batch"
 	}
 
-	if cmd.Client == "runner" {
-		format = FormatRunner
-	}
 	if cmd.Client == "local_batch" {
 		format = FormatBatch
+	}
+
+	if cmd.Client == "runner" {
+		format = FormatRunner
 	}
 
 	return c.do(ctx, "POST", "/", cmd, func(r *http.Response) error {
