@@ -12,52 +12,82 @@ type Format int
 const (
 	FormatObject Format = iota
 	FormatRunner
+	FormatBatch
 )
 
 type ReturnFunc func(string, Response) error
 
 func readReturn(r io.Reader, fn ReturnFunc, format Format) error {
-	dec := json.NewDecoder(r)
 
-	// Object return:
-	//   { "return": [ { string(<id>): object(<value>), ... } ] }
-	//
-	// Runner return:
-	//   { "return": [ <value> ] }
-	var tokens = []json.Token{
+	formatHandlers := map[Format]func(*json.Decoder, ReturnFunc) error{
+		FormatObject: handleObject,
+		FormatBatch:  handleBatch,
+		FormatRunner: handleRunner,
+	}
+	tokens := []json.Token{
 		json.Delim('{'),
 		json.Token("return"),
 		json.Delim('['),
 	}
 
-	if format == FormatObject {
-		tokens = append(tokens, json.Delim('{'))
-	}
-
+	// Read the initial opening sequence common to all formats
+	dec := json.NewDecoder(r)
 	if err := readTokens(dec, tokens); err != nil {
 		return err
 	}
 
-	// The data buffer is reused to minimize allocations.
-	var data Response
+	// Fetch and call the appropriate handler function
+	if handler, ok := formatHandlers[format]; ok {
+		return handler(dec, fn)
+	}
 
+	return fmt.Errorf("unsupported format: %v", format)
+}
+
+// FormatObject is the base case, of one object surround by keys {[{"m1": "res1", "m2": "res2"}]}
+func handleObject(dec *json.Decoder, fn ReturnFunc) error {
+	if err := readTokens(dec, []json.Token{json.Delim('{')}); err != nil {
+		return err
+	}
+
+	if err := processInner(dec, fn); err != nil {
+		return err
+	}
+
+	return readTokens(dec, []json.Token{json.Delim('}'), json.Delim(']'), json.Delim('}')})
+}
+
+// FormatBatch adds a layer of indirection, with each inner object being a singleton return {[{"m1": "res1"}, {"m2": "res2"}]}
+func handleBatch(dec *json.Decoder, fn ReturnFunc) error {
 	for dec.More() {
-		var id string
+		if err := readTokens(dec, []json.Token{json.Delim('{')}); err != nil {
+			return err
+		}
 
-		if format == FormatObject {
-			t, err := dec.Token()
+		if err := processInner(dec, fn); err != nil {
+			return err
+		}
 
-			if err != nil {
-				return err
-			}
+		if err := readTokens(dec, []json.Token{json.Delim('}')}); err != nil {
+			return err
+		}
+	}
 
-			v, ok := t.(string)
+	return readTokens(dec, []json.Token{json.Delim(']'), json.Delim('}')})
+}
 
-			if !ok {
-				return fmt.Errorf("expected string, received %s", t)
-			}
+// ProcessInner handles the actual parsing of the inner keys
+func processInner(dec *json.Decoder, fn ReturnFunc) error {
+	var data Response
+	for dec.More() {
+		t, err := dec.Token()
+		if err != nil {
+			return err
+		}
 
-			id = v
+		id, ok := t.(string)
+		if !ok {
+			return fmt.Errorf("expected string key, received %v", t)
 		}
 
 		if err := dec.Decode(&data); err != nil {
@@ -70,16 +100,25 @@ func readReturn(r io.Reader, fn ReturnFunc, format Format) error {
 			}
 		}
 	}
+	return nil
+}
 
-	switch format {
-	case FormatObject:
-		tokens = []json.Token{json.Delim('}'), json.Delim(']'), json.Delim('}')}
+// FormatRunner relies on the passed in function to handle any further decoding
+func handleRunner(dec *json.Decoder, fn ReturnFunc) error {
+	var data Response
+	for dec.More() {
+		if err := dec.Decode(&data); err != nil {
+			return err
+		}
 
-	case FormatRunner:
-		tokens = []json.Token{json.Delim(']'), json.Delim('}')}
+		if fn != nil {
+			if err := fn("", data); err != nil {
+				return err
+			}
+		}
 	}
 
-	return readTokens(dec, tokens)
+	return readTokens(dec, []json.Token{json.Delim(']'), json.Delim('}')})
 }
 
 // readTokens reads the expected sequence of JSON tokens from the decoder,
