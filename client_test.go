@@ -10,13 +10,14 @@ import (
 )
 
 func TestClient(t *testing.T) {
-	var server, username, password, method string
+	var server, username, password, method, target string
 
 	var values = map[string]*string{
-		"SALTAPI_URL":   &server,
-		"SALTAPI_USER":  &username,
-		"SALTAPI_PASS":  &password,
-		"SALTAPI_EAUTH": &method,
+		"SALTAPI_URL":    &server,
+		"SALTAPI_USER":   &username,
+		"SALTAPI_PASS":   &password,
+		"SALTAPI_EAUTH":  &method,
+		"SALTAPI_TARGET": &target,
 	}
 
 	for k, v := range values {
@@ -88,7 +89,7 @@ func TestClient(t *testing.T) {
 	})
 
 	t.Run("Ping", func(t *testing.T) {
-		err := c.Ping(ctx, "*", func(id string, ok bool) error {
+		err := c.Ping(ctx, target, func(id string, ok bool) error {
 			t.Logf("Ping: ID = %s, OK = %v", id, ok)
 
 			return nil
@@ -107,7 +108,7 @@ func TestClient(t *testing.T) {
 			Arguments: []string{"a1", "a2"},
 			Function:  "test.arg_clean",
 			Keywords:  Object{"k1": 1, "k2": false},
-			Target:    "*",
+			Target:    target,
 			Timeout:   10,
 		}
 

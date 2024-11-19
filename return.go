@@ -2,6 +2,7 @@ package salt
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"reflect"
@@ -107,6 +108,17 @@ func processInner(dec *json.Decoder, fn ReturnFunc) error {
 
 		if err := dec.Decode(&data); err != nil {
 			return err
+		}
+
+		// Handle the "error" field, which is present when interacting with
+		// newer versions of Salt. The default value is an empty object ("{}"),
+		// and the format is unknown.
+		if id == "error" {
+			if len(data) > 2 {
+				return errors.New(string(data))
+			}
+
+			continue
 		}
 
 		if fn != nil {

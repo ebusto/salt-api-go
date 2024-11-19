@@ -7,7 +7,7 @@ import (
 )
 
 // Event represents a parsed event.
-type Event interface{}
+type Event any
 
 // https://docs.saltstack.com/en/latest/topics/event/master_events.html
 var Types = map[*regexp.Regexp]func() Event{
