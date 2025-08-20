@@ -16,6 +16,7 @@ var Types = map[*regexp.Regexp]func() Event{
 	regexp.MustCompile(`salt/beacon/[^/]+/(?P<name>[^/]+)`): New[MinionBeacon],
 	regexp.MustCompile(`salt/job/\d+/new`):                  New[JobNew],
 	regexp.MustCompile(`salt/job/\d+/ret`):                  New[JobReturn],
+	regexp.MustCompile(`salt/job/\d+/prog/[^/]+/\d+`):       New[JobProgress],
 	regexp.MustCompile(`salt/key`):                          New[MinionKey],
 	regexp.MustCompile(`salt/minion/[^/]+/start`):           New[MinionStart],
 	regexp.MustCompile(`salt/presence/change`):              New[PresenceChange],
@@ -49,6 +50,28 @@ type JobReturn struct {
 	ReturnCode int           `json:"retcode"`
 	Success    bool          `json:"success"`
 	Time       Time          `json:"_stamp"`
+}
+
+type JobProgress struct {
+	Time   Time   `json:"_stamp"`
+	Master string `json:"_master"`
+	Cmd    string `json:"cmd"`
+	ID     string `json:"id"`
+	Job    string `json:"jid"`
+	Data   struct {
+		Len    int `json:"len"`
+		Return struct {
+			RunNum    int           `json:"__run_num__"`
+			SLS       string        `json:"__sls__"`
+			StateID   string        `json:"__id__"`
+			Changes   salt.Response `json:"changes"`
+			Comment   string        `json:"comment"`
+			Duration  float64       `json:"duration"`
+			Result    bool          `json:"result"`
+			StartTime string        `json:"start_time"`
+			Name      string        `json:"name"`
+		} `json:"ret"`
+	} `json:"data"`
 }
 
 type MinionAuth struct {
