@@ -3,6 +3,7 @@ package event
 import (
 	"cmp"
 	"encoding/json"
+	"fmt"
 	"slices"
 	"strings"
 )
@@ -13,10 +14,31 @@ type HighStateResult struct {
 	Duration Duration       `json:"duration"`
 	Function string         `json:"function"`
 	ID       string         `json:"__id__"`
-	Name     string         `json:"name"`
+	Name     Name           `json:"name"`
 	Order    int            `json:"__run_num__"`
 	Result   bool           `json:"result"`
 	SLS      string         `json:"__sls__"`
+}
+
+type Name string
+
+func (n *Name) UnmarshalJSON(b []byte) error {
+	// Try string
+	var s string
+	if err := json.Unmarshal(b, &s); err == nil {
+		*n = Name(s)
+		return nil
+	}
+
+	// Try []string
+	var arr []string
+	if err := json.Unmarshal(b, &arr); err == nil {
+		*n = Name(strings.Join(arr, "!!"))
+		return nil
+	}
+
+	// Neither string nor []string
+	return fmt.Errorf("name: expected string or []string, got %s", string(b))
 }
 
 // HighState parses the job return as a highstate return.
